@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocab Hunter</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 Vocab Hunter</h1>
+      <button id="settings-btn" class="icon-btn" title="设置">⚙️</button>
+    </header>
+
+    <!-- 设置面板 -->
+    <div id="settings-panel" class="panel hidden">
+      <div class="panel-header">
+        <h2>设置</h2>
+        <button id="close-settings" class="icon-btn">×</button>
+      </div>
+
+      <div class="settings-content">
+        <div class="form-group">
+          <label for="api-key">OpenRouter API Key</label>
+          <input type="password" id="api-key" placeholder="sk-or-...">
+          <p class="hint">在 <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> 获取</p>
+        </div>
+
+        <div class="form-group">
+          <label for="model-select">选择模型</label>
+          <select id="model-select">
+            <optgroup label="Anthropic">
+              <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku (推荐)</option>
+              <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+              <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+            </optgroup>
+            <optgroup label="OpenAI">
+              <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+              <option value="openai/gpt-4o">GPT-4o</option>
+              <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
+            </optgroup>
+            <optgroup label="Google">
+              <option value="google/gemini-flash-1.5">Gemini Flash 1.5</option>
+              <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
+            </optgroup>
+            <optgroup label="Meta">
+              <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+              <option value="meta-llama/llama-3.1-70b-instruct">Llama 3.1 70B</option>
+            </optgroup>
+            <optgroup label="其他">
+              <option value="custom">自定义模型...</option>
+            </optgroup>
+          </select>
+          <input type="text" id="custom-model" class="hidden" placeholder="例如: deepseek/deepseek-chat">
+        </div>
+
+        <div class="form-group">
+          <label for="prompt-textarea">
+            提示词模板
+            <button id="reset-prompt" class="btn-link">恢复默认</button>
+          </label>
+          <textarea id="prompt-textarea" rows="10" placeholder="自定义 AI 提示词..."></textarea>
+          <p class="hint">使用 <code>{{word}}</code> 和 <code>{{context}}</code> 作为占位符</p>
+        </div>
+
+        <div class="form-group export-dir-group">
+          <label>导出目录设置</label>
+          <div class="export-dir-row">
+            <span class="export-dir-label">JSON:</span>
+            <input type="text" id="json-dir-path" placeholder="未设置（使用默认下载目录）" readonly>
+            <button id="select-json-dir" class="btn btn-small">选择</button>
+            <button id="clear-json-dir" class="btn btn-small btn-secondary">清除</button>
+          </div>
+          <div class="export-dir-row">
+            <span class="export-dir-label">Anki:</span>
+            <input type="text" id="anki-dir-path" placeholder="未设置（使用默认下载目录）" readonly>
+            <button id="select-anki-dir" class="btn btn-small">选择</button>
+            <button id="clear-anki-dir" class="btn btn-small btn-secondary">清除</button>
+          </div>
+          <p class="hint">选择目录后，导出的文件将直接保存到指定位置</p>
+        </div>
+
+        <button id="save-config" class="btn btn-primary btn-full">保存设置</button>
+        <p id="save-status" class="status-text"></p>
+      </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-panel">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="搜索单词...">
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-filter="all">全部</button>
+        <button class="tab" data-filter="0">未掌握</button>
+        <button class="tab" data-filter="1">熟悉</button>
+        <button class="tab" data-filter="2">已掌握</button>
+      </div>
+
+      <div id="vocab-list" class="vocab-list">
+        <div class="empty-state">
+          <p>暂无生词</p>
+          <p class="hint">在网页中划选英文单词即可收藏</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span id="vocab-count">0 个单词</span>
+      <div class="actions">
+        <button id="export-json" class="btn btn-small">导出 JSON</button>
+        <button id="export-anki" class="btn btn-small">导出 Anki</button>
+      </div>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
