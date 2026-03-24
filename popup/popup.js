@@ -64,6 +64,12 @@ function bindEvents() {
   // 导出
   document.getElementById('export-json').addEventListener('click', () => exportVocab('json'));
   document.getElementById('export-anki').addEventListener('click', () => exportVocab('anki'));
+
+  // 导入
+  document.getElementById('import-json').addEventListener('click', () => {
+    document.getElementById('import-file').click();
+  });
+  document.getElementById('import-file').addEventListener('change', handleImport);
 }
 
 async function loadConfig() {
@@ -518,4 +524,47 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// 导入单词
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const data = JSON.parse(event.target.result);
+      if (!Array.isArray(data)) {
+        showStatus('JSON 格式错误：需要数组格式', 'error');
+        return;
+      }
+
+      // 验证数据格式
+      const validItems = data.filter(item => item && item.word);
+      if (validItems.length === 0) {
+        showStatus('未找到有效的单词数据', 'error');
+        return;
+      }
+
+      // 发送到 background 处理
+      chrome.runtime.sendMessage({
+        type: 'IMPORT_VOCAB',
+        data: validItems
+      }, (response) => {
+        if (response && response.success) {
+          showStatus(`成功导入 ${response.imported} 个单词`, 'success');
+          loadVocabList();
+        } else {
+          showStatus('导入失败，请重试', 'error');
+        }
+      });
+    } catch (err) {
+      showStatus('JSON 解析失败', 'error');
+    }
+  };
+  reader.readAsText(file);
+
+  // 清空 input 以便重复选择同一文件
+  e.target.value = '';
 }

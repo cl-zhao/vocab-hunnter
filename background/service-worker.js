@@ -55,6 +55,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'IMPORT_VOCAB') {
+    handleImportVocab(message.data).then(sendResponse);
+    return true;
+  }
+
   if (message.type === 'GET_CONFIG') {
     handleGetConfig().then(sendResponse);
     return true;
@@ -238,6 +243,29 @@ async function handleExportVocab(format) {
   }
 
   return { success: false, error: 'UNKNOWN_FORMAT' };
+}
+
+// 导入生词
+async function handleImportVocab(items) {
+  const vocab = (await storageGet('vocab')) || {};
+  let imported = 0;
+
+  for (const item of items) {
+    if (!item.word) continue;
+    const key = item.word.toLowerCase();
+
+    // 只导入不存在的单词，或者覆盖已存在的
+    vocab[key] = {
+      ...item,
+      word: item.word,
+      savedAt: item.savedAt || Date.now(),
+      mastery: 0 // 导入的单词默认为未掌握
+    };
+    imported++;
+  }
+
+  await storageSet('vocab', vocab);
+  return { success: true, imported };
 }
 
 // 存储 helper
