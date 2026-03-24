@@ -108,13 +108,52 @@
   }
 
   function positionCard(card, rect) {
-    const cardRect = card.getBoundingClientRect();
-    let top = rect.bottom + window.scrollY + 8;
-    let left = rect.left + window.scrollX;
-    if (left + cardRect.width > window.innerWidth) left = window.innerWidth - cardRect.width - 16;
-    if (top + cardRect.height > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - cardRect.height - 8;
-    card.style.top = Math.max(8, top) + 'px';
-    card.style.left = Math.max(8, left) + 'px';
+    // 使用 estimated 尺寸（卡片样式定义了 min-width:280px, max-width:360px）
+    const estimatedHeight = 300;
+    const estimatedWidth = 320;
+    const margin = 8;
+
+    // 计算视口内的可用空间
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // 防御性检查：如果 rect 无效，使用屏幕中央位置
+    if (!rect || rect.width === 0 || rect.height === 0) {
+      card.style.top = Math.max(margin, viewportHeight / 4) + 'px';
+      card.style.left = Math.max(margin, viewportWidth / 2 - estimatedWidth / 2) + 'px';
+      return;
+    }
+
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // 水平位置：确保卡片在视口内
+    let left = rect.left;
+    if (left + estimatedWidth > viewportWidth - margin) {
+      left = viewportWidth - estimatedWidth - margin;
+    }
+    left = Math.max(margin, left);
+
+    // 垂直位置：优先放在下方，如果空间不够则放上方
+    let top;
+    if (spaceBelow >= estimatedHeight + margin) {
+      top = rect.bottom + margin;
+    } else if (spaceAbove >= estimatedHeight + margin) {
+      top = rect.top - estimatedHeight - margin;
+    } else if (spaceBelow >= spaceAbove) {
+      // 下方空间较大，贴底显示
+      top = viewportHeight - estimatedHeight - margin;
+    } else {
+      // 上方空间较大，贴顶显示
+      top = margin;
+    }
+
+    // 最终边界检查：确保卡片完全在视口内
+    top = Math.max(margin, Math.min(top, viewportHeight - estimatedHeight - margin));
+    left = Math.max(margin, Math.min(left, viewportWidth - estimatedWidth - margin));
+
+    card.style.top = top + 'px';
+    card.style.left = left + 'px';
   }
 
   function lookupWord(word, context, card) {
